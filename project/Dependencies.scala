@@ -32,7 +32,7 @@ object Dependencies {
 
   val Alloy = new {
     val org = "com.disneystreaming.alloy"
-    val alloyVersion = "0.3.39"
+    val alloyVersion = "0.3.40"
     val core = org % "alloy-core" % alloyVersion
     val openapi = org %% "alloy-openapi" % alloyVersion
     val protobuf = org % "alloy-protobuf" % alloyVersion
@@ -42,7 +42,9 @@ object Dependencies {
   val Smithytranslate = new {
     val org = "com.disneystreaming.smithy"
     val smithyTranslateVersion = "0.7.6"
-    val proto = org %% "smithytranslate-proto" % smithyTranslateVersion
+    val proto =
+      (org %% "smithytranslate-proto" % smithyTranslateVersion)
+        .excludeAll(ExclusionRule(organization = "com.disneystreaming.alloy"))
   }
 
   val Cats = new {
