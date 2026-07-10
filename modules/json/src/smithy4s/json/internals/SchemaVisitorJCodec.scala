@@ -517,18 +517,20 @@ private[smithy4s] class SchemaVisitorJCodec(
           case a: DArray =>
             out.writeArrayStart()
             a.value match {
-              // short-circuiting on empty arrays to avoid the downcast to array of documents
-              // which has proven to be dangerous in Scala 3:
-              // https://github.com/disneystreaming/smithy4s/issues/1158
-              case x: ArraySeq[_] =>
-                if (x.isEmpty) ()
-                else {
-                  val xs = x.unsafeArray.asInstanceOf[Array[Document]]
-                  var i = 0
-                  while (i < xs.length) {
-                    encodeValue(xs(i), out)
-                    i += 1
-                  }
+              // Fast path: only safe when the backing array is actually Array[Document].
+              // The `else java.util.Arrays.copyOf(arr, i)` in `decodeValue` compiles to
+              // `Arrays.copyOf(Object[], int)` whose return type is Object[]. Since the
+              // result flows directly into `ArraySeq.unsafeWrapArray(Object)`, the compiler
+              // elides the checkcast back to Document[]. Bytecode rewriters (shading/proguard)
+              // can expose this: the ArraySeq ends up backed by Object[] at runtime.
+              // See https://github.com/disneystreaming/smithy4s/issues/1158
+              case x: ArraySeq[_]
+                  if x.unsafeArray.isInstanceOf[Array[Document]] =>
+                val xs = x.unsafeArray.asInstanceOf[Array[Document]]
+                var i = 0
+                while (i < xs.length) {
+                  encodeValue(xs(i), out)
+                  i += 1
                 }
               case xs =>
                 xs.foreach(encodeValue(_, out))
