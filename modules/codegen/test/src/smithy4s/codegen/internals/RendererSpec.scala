@@ -22,6 +22,8 @@ import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.EnumShape
 import software.amazon.smithy.model.shapes.StructureShape
 
+import scala.annotation.nowarn
+
 final class RendererSpec extends munit.ScalaCheckSuite {
   import TestUtils._
 
@@ -454,6 +456,33 @@ final class RendererSpec extends munit.ScalaCheckSuite {
         )
       )
     )
+  }
+
+  test(
+    "string literal containing $ and \" is rendered correctly"
+  ) {
+    val smithy = """
+                   |$version: "2.0"
+                   |
+                   |namespace smithy4s
+                   |
+                   |/// foo $ "
+                   |string MyString
+                   |""".stripMargin
+
+    val contents = generateScalaCode(smithy).values
+
+    @nowarn("msg=possible missing interpolator")
+    val expected =
+      """Hints.dynamic(ShapeId("smithy.api", "documentation"), smithy4s.Document.fromString(s"foo $$ ${'\"'}"))"""
+    assert(
+      contents.exists(
+        _.contains(
+          expected
+        )
+      )
+    )
+    assert(s"foo $$ ${'\"'}" == "foo $ \"")
   }
 
   test(

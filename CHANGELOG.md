@@ -5,6 +5,10 @@ When adding entries, please treat them as if they could end up in a release any 
 
 Thank you!
 
+# 0.19.10
+
+-  Fix codegen bug where string literals containing both `$` and `"` generated code that failed to compile on Scala 2.12 
+
 # 0.19.9
 
 - Support `@structurePattern` targeting unions using `{label}` and `{value}` magic identifiers in [#1978](https://github.com/disneystreaming/smithy4s/pull/1978)
